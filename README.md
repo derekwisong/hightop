@@ -6,7 +6,7 @@ Hightop provides a dynamic real-time view of a running system, similar to top.
 
 This project is built using [Bazel][1]. I prefer to use the [Bazelisk][2] launcher.
 
-### Run hightop from source
+**Run hightop from source:**
 
 ```bash
 bazel run //hightop
