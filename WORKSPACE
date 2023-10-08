@@ -10,9 +10,6 @@ http_archive(
     url = "https://github.com/ArthurSonzogni/FTXUI/archive/v5.0.0.tar.gz",
 )
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-
 # Hedron's Compile Commands Extractor for Bazel
 # https://github.com/hedronvision/bazel-compile-commands-extractor
 http_archive(

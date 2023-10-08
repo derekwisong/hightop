@@ -1,2 +1,3 @@
 #!/bin/bash
-bazel run @hedron_compile_commands//:refresh_all
+echo "Generating compile_commands.json for use by clangd."
+exec bazel run @hedron_compile_commands//:refresh_all
