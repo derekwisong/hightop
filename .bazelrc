@@ -1,0 +1,2 @@
+# ensure that the C++ standard is at least C++17 for FTXUI to compile properly
+build --cxxopt='-std=c++20'
