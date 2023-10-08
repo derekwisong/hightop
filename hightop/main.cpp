@@ -1,6 +1,9 @@
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/screen/screen.hpp>
+
 #include <iostream>
+
+#include "hightop/procs.h"
  
 int main(void) {
   using namespace ftxui;
@@ -8,7 +11,7 @@ int main(void) {
   // Define the document
   Element document =
     hbox({
-      text("left")   | border,
+      text("Processes: " + std::to_string(hightop::count_processes()))   | border,
       text("middle") | border | flex,
       text("right")  | border,
     });
