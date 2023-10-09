@@ -36,8 +36,7 @@ std::vector<Process> get_processes() {
     }
 
     int pid = std::stoi(filename);
-    Process process{pid};
-    processes.emplace_back(process);
+    processes.emplace_back(pid);
   }
 
   return processes;
