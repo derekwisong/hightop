@@ -4,38 +4,48 @@
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include "hightop/procs.h"
  
 
-std::vector<std::vector<ftxui::Element>> get_processes() {
-  auto procs = hightop::get_processes();
-  std::vector<std::vector<ftxui::Element>> rows;
+std::vector<std::vector<std::string>> get_processes() {
+  auto procs = hightop::get_running_processes();
+  std::vector<std::vector<std::string>> rows;
+  rows.push_back({"PID",  "NICE", "PRIO", "VIRT", "RES", "STATE", "COMMAND"});
   std::transform(
     procs.begin(),
     procs.end(),
     std::back_inserter(rows),
     [](const auto& proc){
-      auto name = ftxui::text("PID " + std::to_string(proc.get_pid()));
-      return std::vector<ftxui::Element>({name});
+      const auto& stats = proc.get_stats();
+      return std::vector<std::string>({
+        std::to_string(proc.get_pid()),
+        std::to_string(stats.nice),
+        std::to_string(stats.priority),
+        std::to_string(stats.vsize),
+        std::to_string(stats.rss),
+        std::to_string(stats.state),
+        stats.comm
+      });
     });
   return rows;
 }
 
 int main(void) {
   using namespace ftxui;
-  auto status_label = std::string{"Processes: "} + std::to_string(hightop::count_processes());
   auto processes = get_processes();
+  auto status_label = std::string{"Processes: "} + std::to_string(processes.size());
 
   auto renderer = Renderer([&] {
     Table table(processes);
+    table.SelectRow(0).BorderBottom(BorderStyle::DOUBLE);
 
     return vbox({
       hbox({
         text(status_label),
-      }),
-      separator(),
+      }) | border,
       vbox({
         table.Render() | vscroll_indicator | frame | flex
       }) | flex,
@@ -50,7 +60,7 @@ int main(void) {
   std::thread refresh_ui([&] {
     while (refresh_ui_continue) {
       using namespace std::chrono_literals;
-      std::this_thread::sleep_for(0.05s);
+      std::this_thread::sleep_for(0.2s);
       screen.Post([&]{processes = get_processes(); });
       // After updating the state, request a new frame to be drawn. This is done
       // by simulating a new "custom" event to be handled.
