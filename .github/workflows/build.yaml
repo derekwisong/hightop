@@ -1,4 +1,4 @@
-name: Build hightop with Bazel
+name: Build and test hightop
 
 on:
   push:
@@ -18,4 +18,5 @@ jobs:
         with:
           path: "~/.cache/bazel"
           key: bazel
-      - run: bazel build //hightop
+      - run: bazel build ...
+      - run: bazel test ...
