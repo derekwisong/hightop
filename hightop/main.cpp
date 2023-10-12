@@ -4,6 +4,7 @@
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include "hightop/procs.h"
@@ -18,14 +19,15 @@ std::vector<std::vector<std::string>> get_processes() {
     procs.end(),
     std::back_inserter(rows),
     [](const auto& proc){
+      const auto& stats = proc.get_stats();
       return std::vector<std::string>({
         std::to_string(proc.get_pid()),
-        proc.get_niceness().has_value() ? std::to_string(proc.get_niceness().value()) : "",
-        proc.get_priority().has_value() ? std::to_string(proc.get_priority().value()) : "",
-        proc.get_virtual_memory().has_value() ? std::to_string(proc.get_virtual_memory().value()) : "",
-        proc.get_resident_memory().has_value() ? std::to_string(proc.get_resident_memory().value()) : "",
-        proc.get_state().has_value() ? proc.get_state().value() : "",
-        proc.get_command().value_or(""),
+        std::to_string(stats.nice),
+        std::to_string(stats.priority),
+        std::to_string(stats.vsize),
+        std::to_string(stats.rss),
+        std::to_string(stats.state),
+        stats.comm
       });
     });
   return rows;

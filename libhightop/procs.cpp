@@ -94,15 +94,8 @@ ProcessStats read_process_stats(const std::filesystem::path& path) {
 
 Process::Process(int pid) : pid{pid} {
   auto procfs_path = std::filesystem::path{"/proc"} / std::to_string(pid);
-  // TODO get owner user id of the procfs_path directory
   command = read_line_from_file(procfs_path / "cmdline");
-
-  ProcessStats stats = read_process_stats(procfs_path / "stat");
-  niceness = stats.nice;
-  priority = stats.priority;
-  resident_memory = stats.rss;
-  virtual_memory = stats.vsize;
-  state = std::string(1, stats.state);
+  stats = read_process_stats(procfs_path / "stat");
 }
 
 std::vector<Process> get_running_processes() {

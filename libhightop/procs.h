@@ -78,38 +78,12 @@ class Process {
     std::optional<std::string> get_command() const { return command; }
     void set_command(std::string command) { this->command = std::move(command); }
 
-    std::optional<int> get_niceness() const { return niceness; }
-    void set_niceness(int niceness) { this->niceness = niceness; }
-
-    std::optional<int> get_priority() const { return priority; }
-    void set_priority(int priority) { this->priority = priority; }
-
-    std::optional<int> get_uid() const { return uid; }
-    void set_uid(int uid) { this->uid = uid; }
-
-    std::optional<long> get_virtual_memory() const { return virtual_memory; }
-    void set_virtual_memory(long virtual_memory) { this->virtual_memory = virtual_memory; }
-
-    std::optional<long> get_resident_memory() const { return resident_memory; }
-    void set_resident_memory(long resident_memory) { this->resident_memory = resident_memory; }
-
-    std::optional<long> get_shared_memory() const { return shared_memory; }
-    void set_shared_memory(long shared_memory) { this->shared_memory = shared_memory; }
-
-    std::optional<std::string> get_state() const { return state; }
-    void set_state(std::string state) { this->state = std::move(state); }
+    const ProcessStats& get_stats() const { return stats; }
 
   private:
     int pid;
     std::optional<std::string> command;
-    std::optional<std::string> state;
-    std::optional<int> niceness;
-    std::optional<int> priority;
-    std::optional<int> uid;
-    std::optional<long> virtual_memory;
-    std::optional<long> resident_memory;
-    std::optional<long> shared_memory;
-    std::optional<long> num_threads;
+    ProcessStats stats;
 };
 
 int count_processes();
