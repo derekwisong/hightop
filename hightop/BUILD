@@ -3,7 +3,8 @@ cc_binary(
   srcs = ["main.cpp"],
   visibility = ["//visibility:public"],
   deps = [
-    "@ftxui",
     "//libhightop:hightop",
+    "@ftxui",
+    "@grid-container-ftxui"
   ],
 )
