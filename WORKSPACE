@@ -1,6 +1,5 @@
 workspace(name="hightop")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 # https://github.com/ArthurSonzogni/FTXUI
 http_archive(
@@ -35,9 +34,10 @@ http_archive(
 )
 
 # ftui grid container component https://github.com/mingsheng13/grid-container-ftxui
-git_repository(
+http_archive(
     name = "grid-container-ftxui",
-    remote = "git@github.com:mingsheng13/grid-container-ftxui.git",
-    commit = "5deab11f7b60ff9d75c5718b63637e7a1dbed86a",
-    build_file = "//third_party:grid-container-ftxui.BUILD"
+    url = "https://github.com/mingsheng13/grid-container-ftxui/archive/5deab11f7b60ff9d75c5718b63637e7a1dbed86a.zip",
+    strip_prefix = "grid-container-ftxui-5deab11f7b60ff9d75c5718b63637e7a1dbed86a",
+    build_file = "//third_party:grid-container-ftxui.BUILD",
+    sha256 = "673f4ebfe3efa18cf02d545070bc4fe9e96b111728f193c9691107179b192cf1"
 )
