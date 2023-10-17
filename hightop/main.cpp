@@ -13,14 +13,15 @@
 
 #include "hightop/procs.h"
 #include "hightop/SystemStats.h"
-#include "libhightop/SystemStats.h"
+
+#include "ui/ftxui-interactive-table/interactive-table.h"
 
 namespace {
 
 std::vector<std::vector<std::string>> get_processes() {
   auto procs = hightop::get_running_processes();
   std::vector<std::vector<std::string>> rows;
-  rows.push_back({"PID",  "NICE", "PRIO", "VIRT", "RES", "STATE", "STIME", "COMMAND"});
+  //rows.push_back({"PID",  "NICE", "PRIO", "VIRT", "RES", "STATE", "STIME", "COMMAND"});
   std::transform(
     procs.begin(),
     procs.end(),
@@ -47,70 +48,86 @@ int main(void) {
   hightop::SystemStats system_stats;
   auto processes = get_processes();
   auto screen = ScreenInteractive::Fullscreen();
+  auto selected_row = std::make_shared<int>(0);
+
+  std::vector<ftxui::Components> process_rows;
+
+  for (const auto& process : processes) {
+    ftxui::Components row;
+    for (auto iter = process.begin(); iter != process.end(); iter++) {
+      auto val = *iter;
+      auto decorator = (iter == process.end() - 1) ? ftxui::flex : ftxui::size(ftxui::WIDTH, ftxui::EQUAL, 12);
+      row.push_back(Renderer([val, decorator]{return text(val) | decorator;}));
+    }
+    process_rows.emplace_back(std::move(row));
+  }
 
   auto renderer = Renderer([&] {
-    std::vector<ftxui::Components> process_rows;
-    for (const auto& process : processes) {
-      ftxui::Components row;
-      for (auto iter = process.begin(); iter != process.end(); iter++) {
-        auto val = *iter;
-        auto decorator = (iter == process.end() - 1) ? ftxui::flex : ftxui::size(ftxui::WIDTH, ftxui::EQUAL, 10);
-        row.push_back(ftxui::Renderer([val, decorator]{return text(val) | decorator;}));
-      }
-      process_rows.emplace_back(std::move(row));
-    }
-    auto grid = ftxui::GridContainer(process_rows);
-    Table table(processes);
-    table.SelectRow(0).BorderBottom(BorderStyle::DOUBLE);
-
+    auto grid = hightop::ui::InteractiveTable(process_rows, selected_row);
     return vbox({
       hbox({
-        text("Processes: " + std::to_string(processes.size())),
-        separator(),
+        text("TASKS: " + std::to_string(processes.size())),
+        filler(),
         text(
-          "Load avg.: " 
+          "LOAD: " 
           + std::to_string(system_stats.get_load_1_min())
-          + " "
+          + "/"
           + std::to_string(system_stats.get_load_5_min())
-          + " "
+          + "/"
           + std::to_string(system_stats.get_load_15_min())
         ),
-        separator(),
+        filler(),
         text(std::to_string(system_stats.get_uptime())),
-        separator(),
+        filler(),
         text(std::to_string(system_stats.get_idle_time())),
-        separator(),
+        filler(),
         text(std::to_string(system_stats.get_num_entities())),
-        separator(),
+        filler(),
         text(std::to_string(system_stats.get_num_runnable_entities())),
-      }) | border,
-      vbox({
-        grid->Render() | vscroll_indicator | frame | flex | border,
-      }) | flex,
+      }) | bold,
       separator(),
-      hbox({text("footer")})
+      grid->Render() | vscroll_indicator | yframe | flex,
+      separator(),
+      hbox({
+        text("Selected row: " + std::to_string(*selected_row)),
+      })
     });
   });
  
-  
-  std::atomic<bool> refresh_ui_continue = true;
-  std::thread refresh_ui([&] {
-    while (refresh_ui_continue) {
-      using namespace std::chrono_literals;
-      std::this_thread::sleep_for(2.0s);
-      screen.Post([&]{
-        processes = get_processes();
-        system_stats = hightop::SystemStats();
-      });
-      // After updating the state, request a new frame to be drawn. This is done
-      // by simulating a new "custom" event to be handled.
-      screen.Post(Event::Custom);
+
+  renderer = ftxui::CatchEvent(renderer, [&](ftxui::Event event){
+    using namespace ftxui;
+    if (event == Event::ArrowDown) {
+      if (*selected_row < processes.size() - 1) (*selected_row)++;
+      return true;
     }
+    else if (event == Event::ArrowUp) {
+     if (*selected_row > 0) (*selected_row)--;
+      return true;
+    }
+
+    return false;
   });
 
+  
+  // std::atomic<bool> refresh_ui_continue = true;
+  // std::thread refresh_ui([&] {
+  //   while (refresh_ui_continue) {
+  //     using namespace std::chrono_literals;
+  //     std::this_thread::sleep_for(2.0s);
+  //     screen.Post([&]{
+  //       processes = get_processes();
+  //       system_stats = hightop::SystemStats();
+  //     });
+  //     // After updating the state, request a new frame to be drawn. This is done
+  //     // by simulating a new "custom" event to be handled.
+  //     screen.Post(Event::Custom);
+  //   }
+  // });
+
   screen.Loop(renderer);
-  refresh_ui_continue = false;
-  refresh_ui.join();
+  // refresh_ui_continue = false;
+  // refresh_ui.join();
 
   return EXIT_SUCCESS;
 }

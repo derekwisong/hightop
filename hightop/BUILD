@@ -5,6 +5,7 @@ cc_binary(
   deps = [
     "//libhightop:hightop",
     "@ftxui",
-    "@grid-container-ftxui"
+    "@grid-container-ftxui",
+    "//hightop/ui/ftxui-interactive-table"
   ],
 )
