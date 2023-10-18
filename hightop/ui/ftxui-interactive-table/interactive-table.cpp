@@ -40,7 +40,8 @@ namespace {
     };
 
     public:
-    Impl(const std::vector<ftxui::Components>& rows, std::shared_ptr<int> selected_row) : rows(rows), selected_row(selected_row) {
+
+    Impl(const std::vector<ftxui::Components>& rows, std::vector<std::string> columns, std::shared_ptr<int> selected_row) : selected_row(selected_row), columns(std::move(columns)) {
       ftxui::Components lines;
       for (const auto& row : rows) {
         lines.push_back(ftxui::Make<Line>(row));
@@ -48,18 +49,42 @@ namespace {
       Add(ftxui::Container::Vertical(lines, selected_row.get()));
     }
 
+    Impl(const std::vector<ftxui::Components>& rows, std::shared_ptr<int> selected_row) : Impl(rows, {}, std::move(selected_row)) {}
     private:
 
     ftxui::Element Render() override {
+      using namespace ftxui;
+      auto vertical = Container::Vertical({});
+      
+      if (!columns.empty()) {
+        Components header_cells;
+        for (const auto& column : columns) {
+          header_cells.push_back(Renderer([&]{
+            return text(column);
+          }));
+        }
+        auto header_row = Container::Horizontal(header_cells);
+        return vbox({
+          header_row->Render(),
+          ComponentBase::Render(),
+        });
+      }
+
       return ComponentBase::Render();
     }
-    const std::vector<ftxui::Components>& rows;
+
     std::shared_ptr<int> selected_row;
+    std::vector<std::string> columns;
   };
 } // namespace 
 
 ftxui::Component InteractiveTable(const std::vector<ftxui::Components>& rows, std::shared_ptr<int> selected_row) {
   return ftxui::Make<Impl>(rows, std::move(selected_row));
 }
+
+ftxui::Component InteractiveTable(const std::vector<ftxui::Components>& rows, std::vector<std::string> columns, std::shared_ptr<int> selected_row) {
+  return ftxui::Make<Impl>(rows, std::move(columns), std::move(selected_row));
+}
+
 
 } // namespace hightop::ui

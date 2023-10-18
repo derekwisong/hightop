@@ -6,6 +6,7 @@
 
 #include <ftxui-grid-container/grid-container.hpp>
 
+#include <functional>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -14,9 +15,25 @@
 #include "hightop/procs.h"
 #include "hightop/SystemStats.h"
 
+#include "libhightop/procs.h"
 #include "ui/ftxui-interactive-table/interactive-table.h"
 
 namespace {
+
+class Column {
+  public:
+  Column(std::string name) : name(std::move(name)) {}
+  Column(std::string name, std::function<ftxui::Component(const hightop::Process&)> get_element) : name(std::move(name)), get_element_callback(std::move(get_element)) {}
+  ftxui::Component get_element(const hightop::Process& proc) const {
+    return get_element_callback(proc);
+  }
+  std::string get_name() const {
+    return name;
+  }
+  private:
+  std::string name;
+  std::function<ftxui::Component(const hightop::Process&)> get_element_callback;
+};
 
 std::vector<std::vector<std::string>> get_processes() {
   auto procs = hightop::get_running_processes();
@@ -46,24 +63,38 @@ std::vector<std::vector<std::string>> get_processes() {
 int main(void) {
   using namespace ftxui;
   hightop::SystemStats system_stats;
-  auto processes = get_processes();
+  auto processes = hightop::get_running_processes();
   auto screen = ScreenInteractive::Fullscreen();
   auto selected_row = std::make_shared<int>(0);
+
+  std::vector<Column> columns({
+    Column("PID", [](const hightop::Process& proc){return Renderer([&]{return text(std::to_string(proc.get_pid()));});}),
+    Column("NICE", [](const hightop::Process& proc){return Renderer([&]{return text(std::to_string(proc.get_stats().nice));});}),
+    Column("PRIO", [](const hightop::Process& proc){return Renderer([&]{return text(std::to_string(proc.get_stats().priority));});}),
+    Column("VIRT", [](const hightop::Process& proc){return Renderer([&]{return text(std::to_string(proc.get_stats().vsize));});}),
+    Column("RES", [](const hightop::Process& proc){return Renderer([&]{return text(std::to_string(proc.get_stats().rss));});}),
+    Column("STATE", [](const hightop::Process& proc){return Renderer([&]{return text(std::string(1, proc.get_stats().state));});}),
+    Column("STIME", [](const hightop::Process& proc){return Renderer([&]{return text(std::to_string(proc.get_stats().stime));});}),
+    Column("COMMAND", [](const hightop::Process& proc){return Renderer([&]{return text(proc.get_stats().comm);});}),
+    Column("CMDLINE", [](const hightop::Process& proc){return Renderer([&]{return text(proc.get_command().value_or(""));});}),
+  });
 
   std::vector<ftxui::Components> process_rows;
 
   for (const auto& process : processes) {
     ftxui::Components row;
-    for (auto iter = process.begin(); iter != process.end(); iter++) {
-      auto val = *iter;
-      auto decorator = (iter == process.end() - 1) ? ftxui::flex : ftxui::size(ftxui::WIDTH, ftxui::EQUAL, 12);
-      row.push_back(Renderer([val, decorator]{return text(val) | decorator;}));
+    for (const auto& column : columns) {
+      row.push_back(column.get_element(process));
     }
     process_rows.emplace_back(std::move(row));
   }
 
+  std::vector<std::string> column_names;
+  std::transform(columns.begin(), columns.end(), std::back_inserter(column_names), [](const auto& column){return column.get_name();});
+
+  auto grid = hightop::ui::InteractiveTable(process_rows, column_names, selected_row);
+
   auto renderer = Renderer([&] {
-    auto grid = hightop::ui::InteractiveTable(process_rows, selected_row);
     return vbox({
       hbox({
         text("TASKS: " + std::to_string(processes.size())),
