@@ -19,3 +19,12 @@ cc_binary(
     "@grid-container-ftxui"
   ],
 )
+
+cc_binary(
+  name = "data",
+  srcs = ["data.cpp"],
+  visibility = ["//visibility:public"],
+  deps = [
+    "@ftxui",
+  ],
+)
