@@ -117,7 +117,7 @@ int main(void) {
         text(std::to_string(system_stats.get_num_runnable_entities())),
       }) | bold,
       separator(),
-      grid->Render() | vscroll_indicator | yframe | flex,
+      grid->Render() | flex,
       separator(),
       hbox({
         text("Selected row: " + std::to_string(*selected_row)),
