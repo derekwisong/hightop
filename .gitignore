@@ -1,3 +1,6 @@
+# ignore the bazel version file which bazelisk uses to pick a version
+.bazelversion
+
 .git
 bazel-*
 ### Automatically added by Hedron's Bazel Compile Commands Extractor: https://github.com/hedronvision/bazel-compile-commands-extractor

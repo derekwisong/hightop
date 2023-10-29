@@ -28,3 +28,15 @@ cc_binary(
     "@ftxui",
   ],
 )
+
+cc_binary(
+  name = "demo",
+  srcs = ["demo.cpp"],
+  visibility = ["//visibility:public"],
+  deps = [
+    "//libhightop:hightop",
+    "@ftxui",
+    "@grid-container-ftxui"
+  ],
+)
+
